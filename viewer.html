@@ -19,6 +19,8 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            /* Added padding-top to prevent content from hiding behind the fixed header */
+            padding-top: 130px; 
         }
 
         #chapter-title a {
@@ -27,7 +29,7 @@
         }
 
         #chapter-title a:hover {
-            color: #e87a5d;         /* Optional: Turns blue only when you hover over it */
+            color: #e87a5d;         /* Turns custom accent color on hover */
         }
 
         header, footer {
@@ -42,9 +44,16 @@
         }
 
         header {
-            position: sticky;
+            /* CRITICAL UPDATES FOR AUTO-HIDE EFFECT */
+            position: fixed; 
             top: 0;
             z-index: 10;
+            transition: top 0.3s ease-in-out; /* Smooth sliding transition */
+        }
+
+        /* Class toggled via JS to slide the header out of view */
+        header.hide {
+            top: -140px; 
         }
 
         h1 {
@@ -127,7 +136,7 @@
     </header>
 
     <main id="viewer-container">
-        </main>
+    </main>
 
     <div id="status-message" class="status-message">Loading pages...</div>
 
@@ -152,7 +161,7 @@
         // 2. Pad chapter string for cloud paths (e.g., 5 -> "005")
         const chString = String(currentChapter).padStart(3, '0');
 
-        // 3. UI Setup
+        // 3. UI Setup - Fixed to preserve home anchor tag link functionality
         document.getElementById('chapter-number-display').textContent = ` - Chapter ${chString}`;
         const container = document.getElementById('viewer-container');
         const statusMessage = document.getElementById('status-message');
@@ -167,7 +176,7 @@
                 if (currentChapter <= MIN_CHAPTER) {
                     btn.classList.add('disabled');
                 } else {
-                    btn.href = `viewer.html?ch=${currentChapter - 1}`; // Points directly to the viewer page layout
+                    btn.href = `viewer.html?ch=${currentChapter - 1}`; 
                 }
             });
 
@@ -175,7 +184,7 @@
                 if (currentChapter >= MAX_CHAPTER) {
                     btn.classList.add('disabled');
                 } else {
-                    btn.href = `viewer.html?ch=${currentChapter + 1}`; // Points directly to the viewer page layout
+                    btn.href = `viewer.html?ch=${currentChapter + 1}`; 
                 }
             });
         }
@@ -209,6 +218,30 @@
                 }
             };
         }
+
+        // 5. Scroll Optimization Engine: Auto-Hide/Show Header
+        let lastScrollTop = 0;
+        const headerEl = document.querySelector('header');
+        const scrollDelta = 5; // Threshold buffer value to stop flickering anomalies
+
+        window.addEventListener('scroll', () => {
+            let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (Math.abs(lastScrollTop - currentScroll) <= scrollDelta) {
+                return;
+            }
+            
+            // If scrolling down past the header cutoff threshold -> hide
+            if (currentScroll > lastScrollTop && currentScroll > 100) {
+                headerEl.classList.add('hide');
+            } 
+            // If scrolling back up -> show navbar elements again instantly
+            else if (currentScroll < lastScrollTop) {
+                headerEl.classList.remove('hide');
+            }
+            
+            lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
+        });
 
         // Initialize Page
         setupNavigation();
