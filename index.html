@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mahou Sensei Negima - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        header {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .search-container {
+            width: 100%;
+            position: relative;
+        }
+
+        #search-bar {
+            width: 100%;
+            padding: 12px 20px;
+            background-color: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #search-bar:focus {
+            border-color: #007bff;
+        }
+
+        .chapter-list {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chapter-item {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: #ffffff;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .chapter-item:hover {
+            background-color: #242424;
+            transform: translateY(-2px);
+        }
+
+        .chapter-number {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        #no-results {
+            display: none;
+            color: #888;
+            margin-top: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Mahou Sensei Negima</h1>
+        <div class="search-container">
+            <input type="text" id="search-bar" placeholder="Search chapter number" autocomplete="off">
+        </div>
+    </header>
+
+    <main class="chapter-list" id="chapter-list-container">
+        </main>
+
+    <div id="no-results">No chapters found matching that number.</div>
+
+    <script>
+        const TOTAL_CHAPTERS = 355;
+        const listContainer = document.getElementById('chapter-list-container');
+        const searchBar = document.getElementById('search-bar');
+        const noResults = document.getElementById('no-results');
+
+        // 1. Dynamically build the chapter list from 1 to 355
+        const chapters = [];
+        for (let i = 1; i <= TOTAL_CHAPTERS; i++) {
+            chapters.push({
+                num: i,
+                paddedNum: String(i).padStart(3, '0')
+            });
+        }
+
+        // 2. Render chapters into the DOM
+        function renderChapters(chapterArray) {
+            listContainer.innerHTML = '';
+            
+            if (chapterArray.length === 0) {
+                noResults.style.display = 'block';
+                return;
+            }
+            noResults.style.display = 'none';
+
+            chapterArray.forEach(ch => {
+                const a = document.createElement('a');
+                a.href = `viewer.html?ch=${ch.num}`;
+                a.className = 'chapter-item';
+                // Store the numeric string on the element for easy structural filtering
+                a.setAttribute('data-ch', ch.num); 
+                
+                a.innerHTML = `
+                    <span>Chapter ${ch.paddedNum}</span>
+                `;
+                listContainer.appendChild(a);
+            });
+        }
+
+        // <span class="chapter-number"># ${ch.num}</span> optional in a.innerHTML
+
+        // 3. Real-time Live Search Event Listener
+        searchBar.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            
+            // If search is empty, show everything
+            if (!query) {
+                renderChapters(chapters);
+                return;
+            }
+
+            // Filter out items that match the exact sequence typed
+            const filtered = chapters.filter(ch => {
+                return ch.num.toString().includes(query) || ch.paddedNum.includes(query);
+            });
+
+            renderChapters(filtered);
+        });
+
+        // Initial setup run
+        renderChapters(chapters);
+    </script>
+
+</body>
+</html>

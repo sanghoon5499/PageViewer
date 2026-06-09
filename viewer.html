@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Manga Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #chapter-title a {
+            color: #ffffff;         /* Keeps the text white */
+            text-decoration: none;  /* Removes the underline */
+        }
+
+        #chapter-title a:hover {
+            color: #e87a5d;         /* Optional: Turns blue only when you hover over it */
+        }
+
+        header, footer {
+            width: 100%;
+            padding: 15px 20px;
+            background-color: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+            justify-content: space-between;
+        }
+
+        .nav-btn {
+            background-color: #2a2a2a;
+            color: #ffffff;
+            border: 1px solid #444;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex: 1;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background-color: #3a3a3a;
+        }
+
+        .nav-btn.disabled {
+            background-color: #151515;
+            color: #444;
+            border-color: #222;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+
+        #viewer-container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .manga-page {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 8px; /* Your adjustable page gap */
+            background-color: #000000;
+        }
+
+        .status-message {
+            margin: 20px;
+            color: #888;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 id="chapter-title">
+            <a href="./index.html">Mahou Sensei Negima</a> 
+            <span id="chapter-number-display"></span>
+        </h1>
+        <div class="nav-controls">
+            <a id="prev-btn-top" class="nav-btn">◀ Prev</a>
+            <a id="next-btn-top" class="nav-btn">Next ▶</a>
+        </div>
+    </header>
+
+    <main id="viewer-container">
+        </main>
+
+    <div id="status-message" class="status-message">Loading pages...</div>
+
+    <footer>
+        <div class="nav-controls">
+            <a id="prev-btn-bottom" class="nav-btn">◀ Prev</a>
+            <a id="next-btn-bottom" class="nav-btn">Next ▶</a>
+        </div>
+    </footer>
+
+    <script>
+        // 1. Determine current chapter from URL query string (e.g., ?ch=5). Defaults to Chapter 1.
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentChapter = parseInt(urlParams.get('ch')) || 1;
+        
+        // Bounds checking based on your library scale
+        const MIN_CHAPTER = 1;
+        const MAX_CHAPTER = 355;
+        if (currentChapter < MIN_CHAPTER) currentChapter = MIN_CHAPTER;
+        if (currentChapter > MAX_CHAPTER) currentChapter = MAX_CHAPTER;
+
+        // 2. Pad chapter string for cloud paths (e.g., 5 -> "005")
+        const chString = String(currentChapter).padStart(3, '0');
+
+        // 3. UI Setup
+        document.getElementById('chapter-number-display').textContent = ` - Chapter ${chString}`;
+        const container = document.getElementById('viewer-container');
+        const statusMessage = document.getElementById('status-message');
+
+        // Configure Navigation Links
+        function setupNavigation() {
+            const prevBtns = [document.getElementById('prev-btn-top'), document.getElementById('prev-btn-bottom')];
+            const nextBtns = [document.getElementById('next-btn-top'), document.getElementById('next-btn-bottom')];
+
+            // Handle Prev buttons
+            prevBtns.forEach(btn => {
+                if (currentChapter <= MIN_CHAPTER) {
+                    btn.classList.add('disabled');
+                } else {
+                    btn.href = `viewer.html?ch=${currentChapter - 1}`; // Points directly to the viewer page layout
+                }
+            });
+
+            nextBtns.forEach(btn => {
+                if (currentChapter >= MAX_CHAPTER) {
+                    btn.classList.add('disabled');
+                } else {
+                    btn.href = `viewer.html?ch=${currentChapter + 1}`; // Points directly to the viewer page layout
+                }
+            });
+        }
+
+        // 4. Image Loading Engine
+        const baseUrl = `https://storage.googleapis.com/sc-manga/mahou_sensei_negima/mahou_sensei_negima_${chString}/`;
+        const prefix = `ch${chString}_p`;
+        let currentPage = 1;
+
+        function loadNextPage() {
+            const img = new Image();
+            let extensionAttempt = 'jpg';
+            
+            img.src = `${baseUrl}${prefix}${currentPage}.${extensionAttempt}`;
+            img.className = 'manga-page';
+            img.alt = `Chapter ${currentChapter} - Page ${currentPage}`;
+
+            img.onload = function() {
+                container.appendChild(img);
+                currentPage++;
+                loadNextPage();
+            };
+
+            img.onerror = function() {
+                if (extensionAttempt === 'jpg') {
+                    extensionAttempt = 'png';
+                    img.src = `${baseUrl}${prefix}${currentPage}.${extensionAttempt}`;
+                } else {
+                    console.log(`Finished loading chapter ${currentChapter} at page ${currentPage - 1}`);
+                    statusMessage.textContent = `End of Chapter ${currentChapter} (Total Pages: ${currentPage - 1})`;
+                }
+            };
+        }
+
+        // Initialize Page
+        setupNavigation();
+        loadNextPage();
+    </script>
+
+</body>
+</html>
