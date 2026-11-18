@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Viewer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 { font-size: 1.5rem; margin-bottom: 20px; }
+        h1 a { color: #ffffff; text-decoration: none; }
+        h1 a:hover { color: #e87a5d; }
+
+        #list { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 10px; }
+
+        .item {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px 20px;
+            color: #ffffff;
+            text-decoration: none;
+        }
+        .item:hover { background-color: #242424; }
+
+        #player { width: 100%; max-width: 1000px; max-height: 85vh; background: #000; display: none; }
+
+        .nav { display: none; gap: 15px; width: 100%; max-width: 400px; margin-top: 15px; }
+        .nav-btn {
+            flex: 1;
+            text-align: center;
+            background-color: #2a2a2a;
+            color: #ffffff;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 8px 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+        .nav-btn:hover { background-color: #3a3a3a; }
+        .nav-btn.disabled { background-color: #151515; color: #444; border-color: #222; pointer-events: none; }
+
+        #status { margin: 20px; color: #888; font-size: 0.9rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1><a id="title" href="./video.html">Videos</a></h1>
+    <video id="player" controls playsinline></video>
+    <div id="nav" class="nav">
+        <a id="prev" class="nav-btn">◀ Prev</a>
+        <a id="next" class="nav-btn">Next ▶</a>
+    </div>
+    <div id="list"></div>
+    <div id="status"></div>
+
+    <script>
+        const BASE_URL = 'https://storage.googleapis.com/sc-other/esfk-vcbu-sfek-zxyi/';
+        const EXT = 'mkv'; // change if the files use a different extension
+
+        // Episode number is the position in this list (1-based), same as the number in the filename.
+        const FILES = [
+            '1-feij-sfjl',
+            '2-fsjl-weop',
+            '3-cvpl-qgln',
+            '4-fqpk-sqbn',
+            '5-qtur-vndk',
+            '6-vlsp-ghhg',
+            '7-opkl-ijds',
+            '8-qpwo-wovj',
+            '9-ongi-jgwi',
+            '10-emor-ryem',
+            '11-ther-hrop',
+            '12-olve-some',
+            '13-tuer-spre',
+            '14-dear-qfoh',
+            '15-feiw-sfhp',
+            '16-rion-wyod',
+            '17-orin-srtp',
+            '18-osdg-gwyb',
+            '19-tesb-didd',
+            '20-ssan-gnum',
+        ];
+
+        const list = document.getElementById('list');
+        const status = document.getElementById('status');
+        const player = document.getElementById('player');
+        const ep = parseInt(new URLSearchParams(location.search).get('ep'), 10);
+
+        if (ep >= 1 && ep <= FILES.length) {
+            const label = `Episode ${ep}`;
+            document.title = label;
+            document.getElementById('title').textContent = label;
+            player.src = `${BASE_URL}${FILES[ep - 1]}.${EXT}`;
+            player.style.display = 'block';
+
+            document.getElementById('nav').style.display = 'flex';
+            const prev = document.getElementById('prev');
+            const next = document.getElementById('next');
+            if (ep > 1) prev.href = `video.html?ep=${ep - 1}`; else prev.classList.add('disabled');
+            if (ep < FILES.length) next.href = `video.html?ep=${ep + 1}`; else next.classList.add('disabled');
+            player.onerror = () => { status.textContent = `Could not load ${FILES[ep - 1]}.${EXT}`; };
+        } else {
+            FILES.forEach((_, i) => {
+                const a = document.createElement('a');
+                a.className = 'item';
+                a.href = `video.html?ep=${i + 1}`;
+                a.textContent = `Episode ${i + 1}`;
+                list.appendChild(a);
+            });
+        }
+    </script>
+</body>
+</html>
