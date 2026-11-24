@@ -99,6 +99,14 @@
         const ep = parseInt(new URLSearchParams(location.search).get('ep'), 10);
 
         if (ep >= 1 && ep <= FILES.length) {
+            // Spacebar always toggles play/pause, even when a player control has focus.
+            document.addEventListener('keydown', (e) => {
+                if (e.code !== 'Space') return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (player.paused) player.play(); else player.pause();
+            }, true);
+            player.focus();
             const label = `Episode ${ep}`;
             document.title = label;
             document.getElementById('title').textContent = label;
